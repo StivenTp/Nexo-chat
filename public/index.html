@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="NEXO Chat: conversaciones en tiempo real con Node.js y Socket.IO.">
+  <title>NEXO — Chat en tiempo real</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/socket.io/socket.io.js" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="Panel lateral">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 7.5A4.5 4.5 0 0 1 9.5 3H15a5 5 0 0 1 5 5v5a5 5 0 0 1-5 5h-3.8L6 21v-3.7A4.49 4.49 0 0 1 5 14.5v-7Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M8.5 9.5h8M8.5 13h5.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        </span>
+        <div><div class="brand-name">NEXO<span>.</span></div><div class="brand-subtitle">Connect & chat</div></div>
+      </div>
+
+      <div class="workspace-caption">TU ESPACIO</div>
+      <div class="workspace-card">
+        <div class="workspace-icon">N</div>
+        <div><strong>Comunidad NEXO</strong><span>Espacio de conversación</span></div>
+        <span class="workspace-chevron">⌄</span>
+      </div>
+
+      <div class="sidebar-divider"></div>
+      <div class="section-label">CANALES <span class="section-count">01</span></div>
+      <div class="channel active" aria-current="page"><span class="hash-icon">#</span><span>general</span><span class="channel-dot"></span></div>
+      <div class="sidebar-divider online-divider"></div>
+
+      <div class="section-label"><span>EN LÍNEA</span><span class="online-pill" id="sidebarOnlineCount">0</span></div>
+      <div class="online-users" id="onlineUsers" aria-live="polite">
+        <p class="users-empty">Esperando participantes…</p>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="connection-panel"><span class="status-light offline" id="sidebarStatusLight"></span><div><strong id="sidebarConnectionText">Sin conexión</strong><small>Estado del servidor</small></div></div>
+        <div class="my-profile"><span class="profile-avatar" id="myAvatar">?</span><div><strong id="myName">Invitado</strong><small>Tu perfil</small></div><span class="profile-more">•••</span></div>
+      </div>
+    </aside>
+
+    <div class="mobile-overlay" id="mobileOverlay" hidden></div>
+
+    <main class="main-panel">
+      <header class="topbar">
+        <button class="icon-button menu-button" id="menuButton" aria-label="Abrir menú" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="channel-header-icon">#</div>
+        <div class="channel-header-copy"><h1>general</h1><p>Un lugar para compartir, conectar y conversar.</p></div>
+        <div class="topbar-actions"><div class="header-members"><span class="status-light" id="headerOnlineLight"></span><span id="headerOnlineCount">0 en línea</span></div><button class="invite-button" id="inviteButton" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span>Copiar enlace</span></button></div>
+      </header>
+
+      <div class="disconnect-banner" id="disconnectBanner" hidden><span class="status-light offline"></span>Conexión interrumpida. Intentando reconectar…</div>
+
+      <section class="conversation" id="conversation" aria-label="Conversación del canal general">
+        <div class="chat-intro" id="chatIntro">
+          <div class="intro-sparkle one"></div><div class="intro-sparkle two"></div>
+          <div class="intro-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M5 7.5A4.5 4.5 0 0 1 9.5 3H15a5 5 0 0 1 5 5v5a5 5 0 0 1-5 5h-3.8L6 21v-3.7A4.49 4.49 0 0 1 5 14.5v-7Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/><path d="M8.5 9.5h8M8.5 13h5.5" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg></div>
+          <div class="intro-label"><span class="tiny-star">✦</span> TU NUEVA COMUNIDAD DIGITAL</div>
+          <h2>Las mejores conversaciones<br><span>empiezan aquí.</span></h2>
+          <p>Este es el comienzo del canal <strong>#general</strong>. Saluda, comparte ideas y conecta con personas en tiempo real.</p>
+          <div class="intro-features"><span><i class="feature-dot"></i> Mensajes instantáneos</span><span><i class="feature-dot violet"></i> Conexión en vivo</span></div>
+        </div>
+        <div class="messages" id="messages" role="log" aria-label="Mensajes del chat" aria-live="polite" aria-relevant="additions"></div>
+        <div class="conversation-bottom-anchor" id="bottomAnchor"></div>
+      </section>
+
+      <div class="composer-section">
+        <p class="typing-label" id="typingLabel" aria-live="polite"></p>
+        <form class="composer" id="messageForm" autocomplete="off">
+          <div class="composer-input-wrap"><textarea id="messageInput" name="message" rows="1" maxlength="500" placeholder="Escribe un mensaje en #general…" disabled aria-label="Escribe tu mensaje"></textarea><div class="composer-hint">Enter para enviar · Shift + Enter para nueva línea</div></div>
+          <button class="send-button" id="sendButton" type="submit" aria-label="Enviar mensaje" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4.5-8.5L2 9l20-7Z"/><path d="M22 2 10.5 13.5"/></svg></button>
+        </form>
+        <div class="composer-footer"><span><span class="footer-lock">◇</span> Conversaciones al instante gracias a Socket.IO</span><span id="charCount">0 / 500</span></div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="joinModal">
+    <div class="join-modal" role="dialog" aria-modal="true" aria-labelledby="joinTitle">
+      <div class="modal-stars" aria-hidden="true">✦ <span>✧</span></div>
+      <div class="modal-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M5 7.5A4.5 4.5 0 0 1 9.5 3H15a5 5 0 0 1 5 5v5a5 5 0 0 1-5 5h-3.8L6 21v-3.7A4.49 4.49 0 0 1 5 14.5v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 9.5h8M8.5 13h5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+      <div class="modal-kicker">BIENVENIDO A NEXO</div>
+      <h2 id="joinTitle">Conecta. Conversa.<br><span>Haz que suceda.</span></h2>
+      <p>Solo necesitamos saber cómo llamarte para que puedas entrar a la conversación.</p>
+      <form id="joinForm" novalidate><label for="usernameInput">¿Cómo te llamamos?</label><input id="usernameInput" type="text" minlength="2" maxlength="24" autocomplete="nickname" placeholder="Tu nombre o apodo" required autofocus><p class="join-error" id="joinError" role="alert"></p><button id="joinButton" type="submit">Entrar al chat <span aria-hidden="true">→</span></button></form>
+      <div class="modal-footnote"><span class="footnote-dot"></span> Sin registros. Sin complicaciones. Solo conversar.</div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
